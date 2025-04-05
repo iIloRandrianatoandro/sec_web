@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const https = require('https');
 const fs = require('fs');
+const CryptoJS = require('crypto-js');
 
 const app = express();
 const PORT = 3000;
@@ -25,18 +26,33 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Fonction de déchiffrement
+function decrypt(ciphertext, secretKey) {
+  const bytes = CryptoJS.AES.decrypt(ciphertext, secretKey);
+  return bytes.toString(CryptoJS.enc.Utf8);  // Renvoie le texte déchiffré
+}
+
 // Route pour traiter la connexion
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const user = users.find(u => u.username === username && u.password === password);
+
+  const secretKey = 'votre_clé_secrète';
+
+  const decryptedUsername = decrypt(username, secretKey);
+  const decryptedPassword = decrypt(password, secretKey);
+
+  console.log('Déchiffré:', decryptedUsername, decryptedPassword);  // Vérifiez dans les logs
+
+  const user = users.find(u => u.username === decryptedUsername && u.password === decryptedPassword);
 
   if (!user) {
     return res.status(401).send('Identifiants invalides');
   }
 
-  // Si les identifiants sont valides, redirige vers la page d'accueil
   res.redirect('/accueil');
 });
+
+
 
 // Route pour la page d'accueil (page protégée)
 app.get('/accueil', (req, res) => {
@@ -46,6 +62,3 @@ app.get('/accueil', (req, res) => {
 https.createServer(options, app).listen(3000, () => {
   console.log('Serveur HTTPS démarré sur https://localhost:3000');
 });
-/*app.listen(PORT, () => {
-  console.log(`Serveur en cours sur http://localhost:${PORT}`);
-});*/
