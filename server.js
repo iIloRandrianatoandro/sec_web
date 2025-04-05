@@ -1,9 +1,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const https = require('https');
+const fs = require('fs');
 
 const app = express();
 const PORT = 3000;
+
+const options = {
+  cert: fs.readFileSync('local1.crt'),
+  key: fs.readFileSync('local1.key'),
+  secureProtocol: 'TLS_method', // Utilise la méthode TLS la plus sécurisée
+  secureOptions: require('constants').SSL_OP_NO_SSLv2 | require('constants').SSL_OP_NO_SSLv3, // Désactive SSLv2 et SSLv3
+};
 
 // Utilisateurs simulés
 const users = require('./users');
@@ -34,6 +43,9 @@ app.get('/accueil', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'accueil.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`Serveur en cours sur http://localhost:${PORT}`);
+https.createServer(options, app).listen(3000, () => {
+  console.log('Serveur HTTPS démarré sur https://localhost:3000');
 });
+/*app.listen(PORT, () => {
+  console.log(`Serveur en cours sur http://localhost:${PORT}`);
+});*/
